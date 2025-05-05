@@ -729,4 +729,19 @@ if (!!process.env.NEXT_PUBLIC_SENTRY_DSN) {
   );
 }
 
-module.exports = () => plugins.reduce((acc, next) => next(acc), nextConfig);
+module.exports = () =>
+  plugins.reduce(
+    (acc, next) =>
+      next({
+        ...acc,
+        webpack: (config, options) => {
+          // First run the original webpack config
+          config = acc.webpack ? acc.webpack(config, options) : config;
+          // Add the new webpack customizations
+          config.resolve.alias["handlebars"] = "handlebars/dist/handlebars.min.js";
+          config.ignoreWarnings = [{ message: /Critical dependency/ }, { message: /Module not found/ }];
+          return config;
+        },
+      }),
+    nextConfig
+  );
